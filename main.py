@@ -9,49 +9,31 @@ SECRET = os.getenv("SECRET")
 
 app = FastAPI()
 
-class Msg(BaseModel):
-    msg: str
-    secret: str
+class PostalCode(BaseModel):
+    postal_code: str
 
 @app.get("/")
 async def root():
     return {"message": "Hello!"}
 
-@app.get("/homepage")
-async def demo_get():
-    driver = createDriver()
-    homepage = getGoogleHomepage(driver)
-    driver.close()
-    return homepage
+@app.get("/sales-tax/")
+async def get_sales_tax(postal_code: str):
+    sales_tax = calculate_sales_tax(postal_code)
+    
+    if sales_tax is None:
+        raise HTTPException(status_code=404, detail="Sales tax not found for the provided postal code")
+    
+    return {"sales_tax": sales_tax}
 
-@app.post("/backgroundDemo")
-async def demo_post(inp: Msg, background_tasks: BackgroundTasks):
-    background_tasks.add_task(doBackgroundTask, inp)
-    return {"message": "Success, background task started"}
-
-@app.get("/video/blackwhite")
-async def get_black_white_video(video_url: str):
-    response = requests.get(video_url, stream=True)
-
-    if response.status_code != 200:
-        raise HTTPException(status_code=response.status_code, detail="Failed to fetch video file")
-
-    temp_input_file = "temp_video_input.mp4"
-    temp_output_file = "temp_video_output.mp4"
-
-    with open(temp_input_file, "wb") as file:
-        for chunk in response.iter_content(chunk_size=1024):
-            file.write(chunk)
-
-    try:
-        subprocess.run(["ffmpeg", "-i", temp_input_file, "-vf", "hue=s=0", "-c:a", "copy", temp_output_file], check=True)
-    except (FileNotFoundError, subprocess.CalledProcessError):
-        raise HTTPException(status_code=500, detail="Failed to convert video to black and white")
-
-    with open(temp_output_file, "rb") as file:
-        output_video = file.read()
-
-    os.remove(temp_input_file)
-    os.remove(temp_output_file)
-
-    return output_video
+def calculate_sales_tax(postal_code: str) -> float:
+    # Implement your logic here to calculate and retrieve the sales tax based on the postal code
+    # You can use a database, external API, or any other data source to fetch the sales tax rates
+    
+    # Placeholder logic: Example sales tax rates based on postal code
+    sales_tax_rates = {
+        "10001": 0.085,  # Example sales tax rate for postal code 10001
+        "20001": 0.06,   # Example sales tax rate for postal code 20001
+        # Add more sales tax rates for other postal codes as needed
+    }
+    
+    return sales_tax_rates.get(postal_code)
