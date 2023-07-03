@@ -1,4 +1,4 @@
-ARG PORT=443
+ARG PORT=8000
 
 FROM cypress/browsers:latest
 
@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y ffmpeg
 
 ENV PATH /home/root/.local/bin:${PATH}
 
-RUN  apt-get update && apt-get install -y python3-pip && pip install -r requirements.txt  
+RUN apt-get update && apt-get install -y python3-pip && pip install -r requirements.txt
 
 COPY . .
 
