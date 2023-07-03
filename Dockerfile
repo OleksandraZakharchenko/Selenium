@@ -8,7 +8,7 @@ RUN echo $(python3 -m site --user-base)
 
 COPY requirements.txt .
 
-RUN apt-get install -y ffmpeg
+RUN apt-get update && apt-get install -y ffmpeg
 
 ENV PATH /home/root/.local/bin:${PATH}
 
