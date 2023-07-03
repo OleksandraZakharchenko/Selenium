@@ -29,25 +29,29 @@ async def demo_post(inp: Msg, background_tasks: BackgroundTasks):
     background_tasks.add_task(doBackgroundTask, inp)
     return {"message": "Success, background task started"}
 
-@app.get("/video/length")
-async def get_video_length(video_url: str):
+@app.get("/video/blackwhite")
+async def get_black_white_video(video_url: str):
     response = requests.get(video_url, stream=True)
 
     if response.status_code != 200:
         raise HTTPException(status_code=response.status_code, detail="Failed to fetch video file")
 
-    temp_file = "temp_video.mp4"
+    temp_input_file = "temp_video_input.mp4"
+    temp_output_file = "temp_video_output.mp4"
 
-    with open(temp_file, "wb") as file:
+    with open(temp_input_file, "wb") as file:
         for chunk in response.iter_content(chunk_size=1024):
             file.write(chunk)
 
     try:
-        result = subprocess.run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "default=noprint_wrappers=1:nokey=1", temp_file], capture_output=True, text=True)
-        video_length = float(result.stdout)
+        subprocess.run(["ffmpeg", "-i", temp_input_file, "-vf", "hue=s=0", "-c:a", "copy", temp_output_file], check=True)
     except (FileNotFoundError, subprocess.CalledProcessError):
-        raise HTTPException(status_code=500, detail="Failed to get video length")
+        raise HTTPException(status_code=500, detail="Failed to convert video to black and white")
 
-    os.remove(temp_file)
+    with open(temp_output_file, "rb") as file:
+        output_video = file.read()
 
-    return {"video_length": video_length}
+    os.remove(temp_input_file)
+    os.remove(temp_output_file)
+
+    return output_video
